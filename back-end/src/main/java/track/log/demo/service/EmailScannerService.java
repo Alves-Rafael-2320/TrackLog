@@ -10,6 +10,7 @@ import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import track.log.demo.model.Pedido;
+import track.log.demo.repository.PedidoRepository;
 
 
 import java.util.*;
@@ -18,6 +19,7 @@ import java.util.*;
 public class EmailScannerService {
 
     private final PedidoService pedidoService;
+    private final PedidoRepository pedidoRepository;
 
     @Value("${email.imap.username}")
     private String username;
@@ -27,8 +29,9 @@ public class EmailScannerService {
     private final String host = "imap.gmail.com";
 
 
-    public EmailScannerService(PedidoService pedidoService) {
+    public EmailScannerService(PedidoService pedidoService, PedidoRepository pedidoRepository) {
         this.pedidoService = pedidoService;
+        this.pedidoRepository = pedidoRepository;
     }
 
 
@@ -47,28 +50,45 @@ public class EmailScannerService {
             store.connect(username, password);
 
             Folder inbox = store.getFolder("INBOX");
-            inbox.open(Folder.READ_ONLY);
+            Folder processedFolder = store.getFolder("TrackLog/Processados");
+
+            if (!processedFolder.exists()){
+                processedFolder.create(Folder.HOLDS_MESSAGES);
+            }
+
+            inbox.open(Folder.READ_WRITE);
+            processedFolder.open(Folder.READ_WRITE);
+
+
+
 
             Message[] mensagens = inbox.getMessages();
 
-            for (Message mensagem : mensagens){
-                if (mensagem.isMimeType("text/html") || mensagem.isMimeType("multipart/*")){
+            for (Message mensagem : mensagens) {
+                if (mensagem.isMimeType("text/html") || mensagem.isMimeType("multipart/*")) {
                     String html = extrairHtml(mensagem);
-                    if (html != null && !html.isBlank()){
+
+                    if (html != null && !html.isBlank()) {
                         List<Pedido> pedidos = extrairPedidosDeHtml(html);
 
-                        for (Pedido pedido : pedidos){
+                        for (Pedido pedido : pedidos) {
                             pedidoService.salvarPedido(pedido);
                             System.out.println("PED " + pedido.getNotaFiscal() + " Salvo em AWB " + pedido.getNumeroOperacional());
                         }
 
-                        if (pedidos.isEmpty()){
-                            System.out.println("Nenhum pedido válido extraído do e-mail");
+                        if (!pedidos.isEmpty()) {
+                            // 👉 Somente agora movemos o e-mail para o label
+                            mensagem.setFlag(Flags.Flag.SEEN, true);
+                            inbox.copyMessages(new Message[]{mensagem}, processedFolder);
+                            mensagem.setFlag(Flags.Flag.DELETED, true);
+                        } else {
+                            System.out.println("Nenhum pedido válido extraído do e-mail.");
                         }
                     }
                 }
             }
-            inbox.close(false);
+            inbox.close(true);
+            processedFolder.close(false);
             store.close();
         } catch (Exception e){
             e.printStackTrace();
@@ -145,6 +165,15 @@ public class EmailScannerService {
             }
 
             try {
+                String cte = dados.get("CT-e");
+                String notaFiscal = dados.get("Notas Fiscais");
+
+                Optional<Pedido> existente = pedidoRepository
+                        .findByCteAndNotaFiscal(cte, notaFiscal);
+
+                if (existente.isPresent()) {
+                    continue; // pula este pedido (já existe)
+                }
                 Pedido pedido = new Pedido();
                 pedido.setCte(dados.get("CT-e"));
                 pedido.setNotaFiscal(dados.get("Notas Fiscais"));

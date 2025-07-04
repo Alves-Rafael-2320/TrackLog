@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     List<Pedido> findByNumeroOperacional(String numeroOperacional);
     Optional<Pedido> findByNotaFiscal(String notaFiscal);
+    Optional<Pedido> findByCteAndNotaFiscal(String cte, String notaFiscal);
 }
