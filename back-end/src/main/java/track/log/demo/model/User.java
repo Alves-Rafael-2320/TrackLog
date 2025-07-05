@@ -2,6 +2,10 @@ package track.log.demo.model;
 
 import jakarta.persistence.*;
 
+/**
+ * Representa um usuário autenticado do sistema, com credenciais e papel (role).
+ * Utilizado para login e controle de acesso.
+ */
 @Entity
 @Table(name = "users")
 public class User {

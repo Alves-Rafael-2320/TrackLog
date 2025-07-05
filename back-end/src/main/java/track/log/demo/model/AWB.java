@@ -7,6 +7,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Representa uma AWB (Air Waybill), contendo um número operacional e os pedidos associados.
+ * Também registra metadados internos como recebimento, colaborador e data de recebimento.
+ */
 @Entity
 @Table(name = "awbs")
 public class AWB {
@@ -14,12 +18,13 @@ public class AWB {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    /**Dados obtidos internamente */
+
+    /** Dados internos atribuídos no momento da entrega*/
     private boolean recebida;
     private LocalDateTime dataDeRecebimento;
     private String colaborador;
 
-    /**Dados obtídos através dos e-mail */
+    /** Dados extraídos do conteúdo dos e-mails*/
     private String numeroOperacional;
     @OneToMany(mappedBy = "awb", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
@@ -28,8 +33,6 @@ public class AWB {
     public AWB() {
     }
 
-    /**Caso o PedidoService tente adcionar um pedido a uma Awb inexistente,
-     *utilizar este construtor com o numeroOperacional do pedido*/
     public AWB(String numeroOperacional) {
         this.numeroOperacional = numeroOperacional;
     }

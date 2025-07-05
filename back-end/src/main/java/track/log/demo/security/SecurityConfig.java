@@ -11,8 +11,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import track.log.demo.security.JwtFilter;
 
+/**
+ * Classe de configuração da segurança da aplicação.
+ * Define filtros, regras de autenticação/autorização e gerenciamento de sessão.
+ */
 @Configuration
 public class SecurityConfig {
 

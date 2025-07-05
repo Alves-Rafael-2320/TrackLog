@@ -29,6 +29,12 @@ public class AuthController {
         this.userService = userService;
     }
 
+    /**
+     * Realiza a autenticação do usuário e gera um token JWT em caso de sucesso.
+     *
+     * @param request contém username e password para autenticação
+     * @return token JWT encapsulado em {@link AuthResponse}
+     */
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request){
         Authentication authentication = authenticationManager.authenticate(
@@ -39,6 +45,12 @@ public class AuthController {
         return ResponseEntity.ok(new AuthResponse(token));
     }
 
+    /**
+     * Cadastra um novo usuário no sistema.
+     *
+     * @param request contém username e password do novo usuário
+     * @return mensagem de sucesso se o cadastro for realizado
+     */
     @PostMapping("/register")
     public ResponseEntity<String> cadastrar(@RequestBody AuthRequest request) {
         User user = new User();

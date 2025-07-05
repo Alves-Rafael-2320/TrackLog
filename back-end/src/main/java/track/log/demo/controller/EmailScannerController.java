@@ -17,6 +17,15 @@ public class EmailScannerController {
         this.emailScannerService = emailScannerService;
     }
 
+    /**
+     * Endpoint para iniciar a leitura da caixa de entrada do Gmail.
+     *
+     * Varre os e-mails da pasta INBOX, extrai dados de pedidos a partir do conteúdo HTML
+     * e salva as entidades válidas. E-mails com pedidos processados com sucesso
+     * são movidos para a pasta "TrackLog/Processados".
+     *
+     * @return mensagem indicando que a varredura foi concluída
+     */
     @GetMapping("/scan")
     public ResponseEntity<String> escanearEmails(){
         emailScannerService.lerInbox();

@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * Representa um pedido extraído de e-mails.
+ * Contém informações logísticas como nota fiscal, CTe, destino e status de entrega.
+ */
 @Entity
 @Table(name = "pedidos")
 public class Pedido {
@@ -12,7 +16,7 @@ public class Pedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /**Dados obtídos através dos e-mail */
+    /** Dados extraídos do conteúdo dos e-mails*/
     private String cte;
     private String notaFiscal;
     private String destinatario;
@@ -23,10 +27,11 @@ public class Pedido {
     private double peso;
     private int volume;
     private String embalagem;
+
+    /** Dados internos atribuídos no momento da entrega*/
     private LocalDateTime dataDaEntrega;
     private String colaborador;
     private boolean entregue;
-
 
     @ManyToOne
     @JoinColumn(name = "awb_id")
@@ -153,6 +158,7 @@ public class Pedido {
     public void setDataDaEntrega(LocalDateTime dataDaEntrega) {
         this.dataDaEntrega = dataDaEntrega;
     }
+
     public AWB getAwb() {
         return awb;
     }
@@ -169,4 +175,3 @@ public class Pedido {
         this.colaborador = colaborador;
     }
 }
-

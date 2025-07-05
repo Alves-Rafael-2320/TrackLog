@@ -5,10 +5,13 @@ import io.jsonwebtoken.Jwts;
 import org.springframework.stereotype.Component;
 import io.jsonwebtoken.SignatureAlgorithm;
 
-
 import java.util.Date;
 import java.util.function.Function;
 
+/**
+ * Utilitário para geração, extração e validação de JWTs.
+ * Utilizado para autenticação baseada em token dentro da aplicação.
+ */
 @Component
 public class JwtUtil {
 

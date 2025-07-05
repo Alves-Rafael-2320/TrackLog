@@ -15,6 +15,7 @@ import track.log.demo.service.UserDetailServiceImpl;
 
 import java.io.IOException;
 
+/**Filtro que intercepta as requisições para validar e autenticar JWTs.*/
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 

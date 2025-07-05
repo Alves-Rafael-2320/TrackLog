@@ -1,7 +1,6 @@
 package track.log.demo.service;
 
 import jakarta.mail.Session;
-
 import jakarta.mail.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -12,9 +11,12 @@ import org.springframework.stereotype.Service;
 import track.log.demo.model.Pedido;
 import track.log.demo.repository.PedidoRepository;
 
-
 import java.util.*;
 
+/**
+ * Serviço responsável pela leitura e processamento de e-mails da caixa de entrada do Gmail.
+ * Realiza extração dos pedidos a partir do conteúdo HTML dos e-mails e armazena os dados processados.
+ */
 @Service
 public class EmailScannerService {
 
@@ -28,15 +30,15 @@ public class EmailScannerService {
 
     private final String host = "imap.gmail.com";
 
-
     public EmailScannerService(PedidoService pedidoService, PedidoRepository pedidoRepository) {
         this.pedidoService = pedidoService;
         this.pedidoRepository = pedidoRepository;
     }
 
-
-    /** Inicia a sessão em G-mail, acessa o INBOX e armazena todas as mensagens não lidas
-     * em uma array para serem analisadas. */
+    /**
+     * Inicia a sessão IMAP no Gmail, acessa a caixa de entrada (INBOX) e processa todas as mensagens.
+     * Somente mensagens que contenham pedidos válidos são marcadas como lidas e movidas para a label "TrackLog/Processados".
+     */
     public void lerInbox(){
         try {
             Properties props = new Properties();
@@ -59,9 +61,6 @@ public class EmailScannerService {
             inbox.open(Folder.READ_WRITE);
             processedFolder.open(Folder.READ_WRITE);
 
-
-
-
             Message[] mensagens = inbox.getMessages();
 
             for (Message mensagem : mensagens) {
@@ -77,7 +76,7 @@ public class EmailScannerService {
                         }
 
                         if (!pedidos.isEmpty()) {
-                            //Move os e-mails que seguem os padrões de criação de pedido/awb para uma label no G-mail
+                            // Move os e-mails com pedidos válidos para a label "Processados" e marca como lidos
                             mensagem.setFlag(Flags.Flag.SEEN, true);
                             inbox.copyMessages(new Message[]{mensagem}, processedFolder);
                             mensagem.setFlag(Flags.Flag.DELETED, true);
@@ -95,8 +94,11 @@ public class EmailScannerService {
         }
     }
 
-    /** Testa se as mensagens armazenadas no array se text/html as retorna
-     * se multipart/* a converte para String e então a retorna. */
+    /**
+     * Extrai o conteúdo HTML de uma mensagem.
+     * Se for do tipo "text/html", retorna o conteúdo diretamente.
+     * Se for do tipo "multipart/*", busca a parte do tipo "text/html".
+     */
     private String extrairHtml(Message mensagem) throws Exception {
         if (mensagem.isMimeType("text/html")) {
             return mensagem.getContent().toString();
@@ -113,8 +115,11 @@ public class EmailScannerService {
         return null;
     }
 
-    /** Analisa o conteúdo do html e extraí os valores em suas tabelas em seguida os usa para construir
-     *  os pedidos. */
+    /**
+     * Analisa o HTML extraído dos e-mails e identifica as tabelas de pedidos.
+     * Para cada linha válida na tabela, cria um objeto Pedido preenchido com os dados extraídos.
+     * Retorna uma lista com todos os pedidos extraídos.
+     */
     public List<Pedido> extrairPedidosDeHtml(String html) {
         List<Pedido> pedidos = new ArrayList<>();
 
@@ -122,7 +127,6 @@ public class EmailScannerService {
         Element table = doc.selectFirst("table");
         if (table == null) return pedidos;
 
-        // Mapeamento de colunas
         List<String> cabecalhos = new ArrayList<>();
         Element thead = table.selectFirst("thead");
         if (thead == null) return pedidos;
@@ -132,8 +136,6 @@ public class EmailScannerService {
             cabecalhos.add(th.text().trim());
         }
 
-        /** Valida se o html tem todos os dados necessarios para compor um pedido, se algum estiver
-         * faltando será retornado uma array de pedidos vazia, se não, cada table row irá compor um pedido. */
         List<String> obrigatorios = List.of(
                 "CT-e",
                 "Notas Fiscais",
@@ -151,7 +153,6 @@ public class EmailScannerService {
             return pedidos;
         }
 
-        // Processa cada linha do tbody
         Element tbody = table.selectFirst("tbody");
         if (tbody == null) return pedidos;
 
@@ -185,8 +186,8 @@ public class EmailScannerService {
                 pedido.setPeso(Double.parseDouble(dados.get("Peso").replace(",", ".")));
                 pedido.setVolume(Integer.parseInt(dados.get("Volume")));
                 pedido.setEmbalagem(dados.get("Embalagem"));
-                pedido.setDataDaEntrega(null);// será preenchida depois
-                pedido.setColaborador(null);// será preenchido depois
+                pedido.setDataDaEntrega(null);
+                pedido.setColaborador(null);
                 pedido.setEntregue(false);
 
                 pedidos.add(pedido);
@@ -197,7 +198,5 @@ public class EmailScannerService {
 
         return pedidos;
     }
-
-
 
 }

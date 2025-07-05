@@ -27,9 +27,14 @@ public class PedidoController {
         this.pedidoService = pedidoService;
     }
 
-
-    /** Muda o status de entregue para true, registra o horario atual e o colaborador responsável
-     *  Teste com Postman 200 OK.*/
+    /**
+     * Altera o status de um pedido para entregue, registra o horário atual
+     * e o nome do colaborador responsável.
+     *
+     * @param notaFiscal número da nota fiscal usada para localizar o pedido
+     * @param request contém o nome do colaborador
+     * @return 200 OK se encontrado e atualizado, 404 Not Found se não encontrado
+     */
     @PutMapping("{notaFiscal}/entregar")
     public ResponseEntity<String> registrarEntrega(@PathVariable String notaFiscal, @RequestBody EntregaRequest request){
         return pedidoRepository.findByNotaFiscal(notaFiscal).map(pedido -> {
@@ -41,6 +46,21 @@ public class PedidoController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
+
+
+    /**
+     * Realiza a busca de pedidos com filtros opcionais e suporte à paginação e ordenação.
+     *
+     * @param notaFiscal filtro por nota fiscal
+     * @param numeroOperacional filtro por número operacional
+     * @param destinatario filtro por destinatário
+     * @param cidadeOrigem filtro por cidade de origem
+     * @param cidadeDestino filtro por cidade de destino
+     * @param page número da página (default 0)
+     * @param size quantidade de elementos por página (default 10)
+     * @param sort array com campo e direção (ex: id,asc)
+     * @return página de resultados filtrados
+     */
     @GetMapping
     public Page<Pedido> buscarPedidos(@RequestParam(required = false) String notaFiscal,
                                       @RequestParam(required = false) String numeroOperacional,

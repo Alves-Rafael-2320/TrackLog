@@ -9,11 +9,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-
-
-import java.util.List;
 import java.util.Optional;
 
+/**Serviço responsável por operações CRUD e buscas com filtros para a entidade Pedido.*/
 @Service
 public class PedidoService {
 
@@ -25,21 +23,21 @@ public class PedidoService {
         this.awbService = awbService;
     }
 
+    /**Salva um pedido no banco, associando a uma AWB existente ou criando uma nova com base no número operacional.*/
     public Pedido salvarPedido(Pedido pedido){
-        if (pedido.getNumeroOperacional()!= null && !pedido.getNumeroOperacional().isEmpty()){
+        if (pedido.getNumeroOperacional() != null && !pedido.getNumeroOperacional().isEmpty()){
             AWB awb = awbService.findOrCreateByNumeroOperacional(pedido.getNumeroOperacional());
             pedido.setAwb(awb);
         }
-        return  pedidoRepository.save(pedido);
+        return pedidoRepository.save(pedido);
     }
 
-
-
-
+    /**Busca um pedido pelo número da nota fiscal.*/
     public Optional<Pedido> findByNotaFiscal(String notaFiscal){
         return pedidoRepository.findByNotaFiscal(notaFiscal);
     }
 
+    /**Busca pedidos aplicando filtros opcionais com paginação.*/
     public Page<Pedido> buscarPedidosComFiltros(
             String notaFiscal,
             String numeroOperacional,
