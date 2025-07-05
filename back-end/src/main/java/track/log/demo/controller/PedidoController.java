@@ -1,5 +1,9 @@
 package track.log.demo.controller;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import track.log.demo.dto.EntregaRequest;
@@ -23,26 +27,6 @@ public class PedidoController {
         this.pedidoService = pedidoService;
     }
 
-    /** Retorna todos os pedidos
-     *  Teste com Postman 200 OK.*/
-    @GetMapping
-    public List<Pedido> listarTodosPedidos(){
-        return pedidoRepository.findAll();
-    }
-
-    /** Lista todos pedidos que compartilham uma mesma AWB
-     *  Teste com Postman 200 OK.*/
-    @GetMapping("/findByAWB/{numeroOperacional}")
-    public List<Pedido> findByAWB(@PathVariable String numeroOperacional){
-        return pedidoRepository.findByNumeroOperacional(numeroOperacional);
-    }
-
-    /** Retorna um pedido
-     *  Teste com Postman 200 OK.*/
-    @GetMapping("/findByPedido/{notaFiscal}")
-    public Optional<Pedido> findByPedido(@PathVariable String notaFiscal){
-        return pedidoService.findByNotaFiscal(notaFiscal);
-    }
 
     /** Muda o status de entregue para true, registra o horario atual e o colaborador responsável
      *  Teste com Postman 200 OK.*/
@@ -55,6 +39,38 @@ public class PedidoController {
             pedidoRepository.save(pedido);
             return ResponseEntity.ok("Pedido marcado como entregue.");
         }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping
+    public Page<Pedido> buscarPedidos(@RequestParam(required = false) String notaFiscal,
+                                      @RequestParam(required = false) String numeroOperacional,
+                                      @RequestParam(required = false) String destinatario,
+                                      @RequestParam(required = false) String cidadeOrigem,
+                                      @RequestParam(required = false) String cidadeDestino,
+                                      @RequestParam(defaultValue = "0") int page,
+                                      @RequestParam(defaultValue = "10") int size,
+                                      @RequestParam(defaultValue = "id,asc") String[] sort){
+
+        Sort.Direction direction = Sort.Direction.ASC;
+        String sortBy = "id";
+
+        if (sort.length == 2){
+            sortBy = sort[0];
+            direction = sort[1].equalsIgnoreCase("desc")
+                    ? Sort.Direction.DESC : Sort.Direction.ASC
+;        } else if(sort.length == 1){
+            sortBy = sort[0];
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        return pedidoService.buscarPedidosComFiltros(
+                notaFiscal,
+                numeroOperacional,
+                destinatario,
+                cidadeOrigem,
+                cidadeDestino,
+                pageable);
     }
 
 }

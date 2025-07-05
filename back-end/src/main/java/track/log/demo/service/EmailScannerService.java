@@ -77,7 +77,7 @@ public class EmailScannerService {
                         }
 
                         if (!pedidos.isEmpty()) {
-                            // 👉 Somente agora movemos o e-mail para o label
+                            //Move os e-mails que seguem os padrões de criação de pedido/awb para uma label no G-mail
                             mensagem.setFlag(Flags.Flag.SEEN, true);
                             inbox.copyMessages(new Message[]{mensagem}, processedFolder);
                             mensagem.setFlag(Flags.Flag.DELETED, true);
